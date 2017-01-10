@@ -46,7 +46,7 @@ public:
   /**
    * This function returns true if the given file is a plain text file.
    */
-  bool isPlainText(const std::string& path_) const;
+  bool isPlainText(const std::string& path_);
 
   // TODO: Maybe this function shouldn't exist.
   void persistFiles();

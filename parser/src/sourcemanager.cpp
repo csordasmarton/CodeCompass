@@ -58,7 +58,6 @@ SourceManager::~SourceManager()
 
 model::FilePtr SourceManager::getFile(const std::string& path_)
 {
-  std::lock_guard<std::mutex> guard(_createFileMutex);
   return getCreateFile(path_);
 }
 
@@ -103,7 +102,9 @@ model::FilePtr SourceManager::getCreateFileEntry(
 {
   //--- Return from cache if it contains ---//
 
+  _createFileMutex.lock();
   std::map<std::string, model::FilePtr>::const_iterator it = _files.find(path_);
+  _createFileMutex.unlock();
 
   if (it != _files.end())
     return it->second;
@@ -168,7 +169,14 @@ model::FilePtr SourceManager::getCreateFile(const std::string& path_)
   //--- Create file entry ---//
 
   std::string canonical = ec ? path_ : canonicalPath.native();
-  return _files[canonical] = getCreateFileEntry(canonical, fileExists);
+
+  model::FilePtr file = getCreateFileEntry(canonical, fileExists);
+
+  _createFileMutex.lock();
+  _files[canonical] = file;
+  _createFileMutex.unlock();
+
+  return file;
 }
 
 model::FilePtr SourceManager::getCreateParent(const std::string& path_)
@@ -182,9 +190,11 @@ model::FilePtr SourceManager::getCreateParent(const std::string& path_)
   return getCreateFile(parentPath.native());
 }
 
-bool SourceManager::isPlainText(const std::string& path_) const
+bool SourceManager::isPlainText(const std::string& path_)
 {
+  _createFileMutex.lock();
   const char* magic = ::magic_file(_magicCookie, path_.c_str());
+  _createFileMutex.unlock();
 
   if (!magic)
   {
@@ -200,9 +210,11 @@ bool SourceManager::isPlainText(const std::string& path_) const
 
 void SourceManager::updateFile(const model::File& file_)
 {
-  std::lock_guard<std::mutex> guard(_createFileMutex);
+  _createFileMutex.lock();
+  bool find = _persistedFiles.find(file_.id) != _persistedFiles.end();
+  _createFileMutex.unlock();
 
-  if (_persistedFiles.find(file_.id) != _persistedFiles.end())
+  if (find)
     _transaction([&, this]() {
       _db->update(file_);
     });

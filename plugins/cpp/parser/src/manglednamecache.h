@@ -30,7 +30,9 @@ public:
    * to id_. If no such element exists, an exception of type
    * std::out_of_range is thrown.
    */
-  std::uint64_t at(const model::CppAstNodeId& id_) const;
+  std::uint64_t at(const model::CppAstNodeId& id_);
+
+  bool contain(const model::CppAstNodeId& id_) const;
 
   /**
    * Removes all elements from the cache.

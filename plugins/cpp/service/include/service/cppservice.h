@@ -30,6 +30,7 @@ namespace language
 class CppServiceHandler : virtual public LanguageServiceIf
 {
   friend class Diagram;
+  friend class PointerAnalysisDiagram;
 
 public:
   CppServiceHandler(
@@ -229,8 +230,14 @@ private:
       in the nodes, but the type of the member variables are indicated as
       aggregation relationship. */
 
-    CLASS_COLLABORATION /*!< This returns a class collaboration diagram
+    CLASS_COLLABORATION, /*!< This returns a class collaboration diagram
       which shows the individual class members and their inheritance hierarchy. */
+
+    POINTER_ANALYSIS_ANDERSEN, /*!< This is an Andersen's style pointer analysis
+      diagram which shows the connections of the variables */
+
+    POINTER_ANALYSIS_STEENSGAARD, /*!< This is an Steensgaard's style pointer
+      analysis diagram which shows the connections of the variables */
   };
 
   static bool compareByPosition(
