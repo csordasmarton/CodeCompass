@@ -58,6 +58,7 @@ SourceManager::~SourceManager()
 
 model::FilePtr SourceManager::getFile(const std::string& path_)
 {
+  //std::lock_guard<std::mutex> guard(_createFileMutex);
   return getCreateFile(path_);
 }
 

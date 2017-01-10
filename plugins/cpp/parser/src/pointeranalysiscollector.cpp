@@ -209,7 +209,6 @@ bool ReturnCollector::VisitReturnStmt(clang::ReturnStmt* rs_)
   return true;
 }
 
-
 StmtSideCollector::StmtSideCollector(
   std::set<model::CppPointerAnalysis::StmtSide>& collected_,
   ParserContext& ctx_,

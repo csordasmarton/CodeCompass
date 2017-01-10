@@ -57,6 +57,7 @@ Andersen::PointsToSet Andersen::run(
   //--- Run algorithm on the complex statements ---//
 
   LOG(debug) << "Complex statements size: " << complexStmts.size();
+
   bool changed = !complexStmts.empty();
   while (changed)
   {

@@ -1,3 +1,4 @@
+#include <util/legendbuilder.h>
 #include <util/util.h>
 
 #include "pointeranalysisstmtcollector.h"
@@ -77,7 +78,6 @@ void PointerAnalysisDiagram::getAndersenPointerAnalysisDiagram(
       }
 
       model::CppAstNode& lhsNode = astNodeCache.at(lhsSide.mangledNameHash);
-
       std::string lhsNodeId = std::to_string(lhsNode.id);
       if (!graph_.hasNode(lhsNodeId))
       {
