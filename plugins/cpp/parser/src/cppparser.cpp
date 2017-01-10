@@ -23,8 +23,10 @@
 #include <cppparser/cppparser.h>
 
 #include "assignmentcollector.h"
+#include "pointeranalysiscollector.h"
 #include "clangastvisitor.h"
 #include "manglednamecache.h"
+#include "idcache.h"
 #include "ppincludecallback.h"
 #include "ppmacrocallback.h"
 
@@ -65,8 +67,12 @@ private:
     MyConsumer(
       ParserContext& ctx_,
       clang::ASTContext& context_,
-      MangledNameCache& mangledNameCache_)
-        : _mangledNameCache(mangledNameCache_), _ctx(ctx_), _context(context_)
+      MangledNameCache& mangledNameCache_,
+      IdCache& pointerAnalysisCache_)
+        : _ctx(ctx_),
+          _context(context_),
+          _mangledNameCache(mangledNameCache_),
+          _pointerAnalysisCache(pointerAnalysisCache_)
     {
     }
 
@@ -83,14 +89,22 @@ private:
           _ctx, _context, _mangledNameCache, _clangToAstNodeId);
         assignmentCollector.TraverseDecl(context_.getTranslationUnitDecl());
       }
+
+      if (!_ctx.options.count("skip-cpp-pointeranalysis"))
+      {
+        PointerAnalysisCollector pAnalysisCollector(_ctx, _context,
+          _mangledNameCache, _pointerAnalysisCache, _clangToAstNodeId);
+        pAnalysisCollector.TraverseDecl(context_.getTranslationUnitDecl());
+      }
     }
 
   private:
-    MangledNameCache& _mangledNameCache;
     std::unordered_map<const void*, model::CppAstNodeId> _clangToAstNodeId;
 
     ParserContext& _ctx;
     clang::ASTContext& _context;
+    MangledNameCache& _mangledNameCache;
+    IdCache& _pointerAnalysisCache;
   };
 
   class MyFrontendAction : public clang::ASTFrontendAction
@@ -120,11 +134,13 @@ private:
       clang::CompilerInstance& compiler_, llvm::StringRef) override
     {
       return std::unique_ptr<clang::ASTConsumer>(
-        new MyConsumer(_ctx, compiler_.getASTContext(), _mangledNameCache));
+        new MyConsumer(_ctx, compiler_.getASTContext(), _mangledNameCache,
+          _pointerAnalysisCache));
     }
 
   private:
     static MangledNameCache _mangledNameCache;
+    static IdCache _pointerAnalysisCache;
 
     ParserContext& _ctx;
   };
@@ -133,6 +149,8 @@ private:
 };
 
 MangledNameCache VisitorActionFactory::MyFrontendAction::_mangledNameCache;
+
+IdCache VisitorActionFactory::MyFrontendAction::_pointerAnalysisCache;
 
 bool CppParser::isSourceFile(const std::string& file_) const
 {
@@ -350,6 +368,9 @@ std::vector<std::string> CppParser::getDependentParsers() const
 
 bool CppParser::parse()
 {
+  if (_ctx.options.count("skip-cpp-pointeranalysis"))
+    LOG(info) << "C++ pointer analysis skipped.";
+
   VisitorActionFactory::init(_ctx);
 
   bool success = true;
@@ -406,6 +427,11 @@ extern "C"
   boost::program_options::options_description getOptions()
   {
     boost::program_options::options_description description("C++ Plugin");
+
+    description.add_options()
+    ("skip-cpp-pointeranalysis",
+     "Enable C++ pointer analysis.");
+
     return description;
   }
 

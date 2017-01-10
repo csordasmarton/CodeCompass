@@ -480,6 +480,72 @@ build_autoconf()
   compile generic autoconf-2.69 bin/autoconf
 }
 
+# dep libedit
+compile_neo4j()
+{
+  local src_dir=$1
+  shift # Drop the first argument to get access the rest via $@
+  local config_options=$@
+
+  echo_info "Cleaning $src_dir"
+  make clean
+
+  echo_info "Configuring $src_dir"
+  ./autogen.sh
+  LDFLAGS="$LDFLAGS" ./configure --prefix=$CCMP_DEPS $config_options || exit -1
+
+  echo_info "Making $src_dir"
+  make -j$cpu_count || exit -1
+
+  echo_info "Installing $src_dir"
+  make install || exit -1
+  return 0
+}
+
+compile_edit()
+{
+  dep readline
+
+  local src_dir=$1
+  shift # Drop the first argument to get access the rest via $@
+  local config_options=$@
+
+  echo_info "Cleaning $src_dir"
+  make clean
+
+  echo_info "Configuring $src_dir"
+
+  LDFLAGS="$LDFLAGS"  ./configure --prefix=$CCMP_DEPS --enable-shared --enable-static --enable-widec $config_options || exit -1
+
+  echo_info "Making $src_dir"
+  make -j$cpu_count || exit -1
+
+  echo_info "Installing $src_dir"
+  make install || exit -1
+  return 0
+}
+
+build_edit()
+{
+  download http://thrysoee.dk/editline/libedit-20160903-3.1.tar.gz
+  compile edit libedit-20160903-3.1 bin/edit
+}
+
+build_cypher_parser()
+{
+  download https://github.com/cleishm/libcypher-parser/releases/download/v0.5.2/libcypher-parser-0.5.2.tar.gz
+  compile generic libcypher-parser-0.5.2 bin/cypher-parser
+}
+
+build_neo4j()
+{
+  dep cypher_parser
+  dep edit
+
+  download https://github.com/cleishm/libneo4j-client/releases/download/v1.2.1/libneo4j-client-1.2.1.tar.gz
+  compile neo4j libneo4j-client-1.2.1 bin/neo4j-client
+}
+
 build_automake()
 {
   dep autoconf
@@ -740,8 +806,8 @@ build_sasl()
 build_readline()
 {
   dep gcc
-  download ftp://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz
-  compile generic readline-6.3 lib/libreadline.so
+  download ftp://ftp.gnu.org/gnu/readline/readline-7.0.tar.gz
+  compile generic readline-7.0 lib/libreadline.so
 }
 
 build_pgsql()

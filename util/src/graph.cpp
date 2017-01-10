@@ -112,7 +112,7 @@ Graph::Edge Graph::createEdge(const Node& from_, const Node& to_)
 
 Graph::Subgraph Graph::getOrCreateSubgraph(const std::string& id_)
 {
-  std::string id = id_.empty() ? generateId() : id_;
+  std::string id = "cluster_" + (id_.empty() ? generateId() : id_);
   _ids.insert(id);
 
   _graphPimpl->_subgMap[id]

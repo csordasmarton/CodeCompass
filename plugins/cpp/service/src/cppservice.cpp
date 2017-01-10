@@ -22,6 +22,7 @@
 
 #include <service/cppservice.h>
 
+#include <pointeranalysis/pointeranalysisdiagram.h>
 #include "diagram.h"
 
 namespace
@@ -903,6 +904,14 @@ void CppServiceHandler::getDiagramTypes(
       return_["Class collaboration diagram"] = CLASS_COLLABORATION;
       break;
 
+    case model::CppAstNode::SymbolType::Variable:
+    case model::CppAstNode::SymbolType::FunctionPtr:
+      return_["Pointer analysis diagram (Andersen)"] =
+        POINTER_ANALYSIS_ANDERSEN;
+      return_["Pointer analysis diagram (Steensgaard)"] =
+        POINTER_ANALYSIS_STEENSGAARD;
+      break;
+
     default: // Just to suppress warning of uncovered enum constants.
       break;
   }
@@ -1012,6 +1021,20 @@ void CppServiceHandler::getDiagram(
     case CLASS_COLLABORATION:
       diagram.getClassCollaborationDiagram(graph, astNodeId_);
       break;
+
+    case POINTER_ANALYSIS_ANDERSEN:
+    {
+      PointerAnalysisDiagram diagram(_db, _datadir, _config);
+      diagram.getAndersenPointerAnalysisDiagram(graph, astNodeId_);
+      break;
+    }
+
+    case POINTER_ANALYSIS_STEENSGAARD:
+    {
+      PointerAnalysisDiagram diagram(_db, _datadir, _config);
+      diagram.getSteensgaardPointerAnalysisDiagram(graph, astNodeId_);
+      break;
+    }
   }
 
   if (graph.nodeCount() != 0)

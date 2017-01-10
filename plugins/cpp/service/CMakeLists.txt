@@ -1,5 +1,6 @@
 include_directories(
   include
+  src
   ${PROJECT_SOURCE_DIR}/util/include
   ${PROJECT_SOURCE_DIR}/webserver/include
   ${PROJECT_SOURCE_DIR}/model/include
@@ -12,7 +13,12 @@ include_directories(
 add_library(cppservice SHARED
   src/cppservice.cpp
   src/plugin.cpp
-  src/diagram.cpp)
+  src/diagram.cpp
+  src/pointeranalysis/andersen.cpp
+  src/pointeranalysis/steensgaard.cpp
+  src/pointeranalysis/pointeranalysisstmtcollector.cpp
+  src/pointeranalysis/pointeranalysisdiagram.cpp
+  src/pointeranalysis/util.cpp)
 
 target_compile_options(cppservice PUBLIC -Wno-unknown-pragmas)
 
