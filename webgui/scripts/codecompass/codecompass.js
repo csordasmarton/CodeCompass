@@ -197,6 +197,10 @@ function (dom, style, topic, TitlePane, AccordionContainer, BorderContainer,
     accordion.selectChild(viewHandler.getModule(moduleId), true);
   });
 
+  topic.subscribe('codecompass/initByUrl', function (message) {
+    initByUrl(message);
+  });
+
   topic.subscribe('/dojo/hashchange', function (url) {
     if (urlHandler.hashSetProgress) return;
     initByUrl(urlHandler.getState());
