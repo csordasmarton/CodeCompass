@@ -27,6 +27,7 @@ PointerAnalysisDiagram::PointerAnalysisDiagram(
   const boost::program_options::variables_map& config_)
     : _db(db_),
       _transaction(db_),
+      _config(config_),
       _cppHandler(db_, datadir_, config_),
       _projectHandler(db_, datadir_, config_)
 {
@@ -74,7 +75,7 @@ void PointerAnalysisDiagram::getAndersenPointerAnalysisDiagram(
 
   //--- Collect statements ---//
 
-  PointerAnalysisStmtCollector collector(_db);
+  PointerAnalysisStmtCollector collector(_db, _config);
   std::vector<model::CppPointerAnalysis> statements =
     collector.collect(node.mangledNameHash);
 
@@ -164,7 +165,7 @@ void PointerAnalysisDiagram::getSteensgaardPointerAnalysisDiagram(
 
   //--- Collect statements ---//
 
-  PointerAnalysisStmtCollector collector(_db);
+  PointerAnalysisStmtCollector collector(_db, _config);
   std::vector<model::CppPointerAnalysis> statements =
     collector.collect(node.mangledNameHash);
 

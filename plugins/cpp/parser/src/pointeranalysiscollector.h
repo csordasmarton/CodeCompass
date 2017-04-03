@@ -2,9 +2,12 @@
 #define CC_PARSER_POINTERANALYSISCOLLECTOR_H
 
 #include <vector>
+#include <errno.h>
 
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/AST/Decl.h>
+
+#include <neo4j-client.h>
 
 #include <model/cppastnode.h>
 #include <model/cppastnode-odb.hxx>
@@ -629,6 +632,96 @@ public:
   {
   }
 
+  bool persistDataToNeo4j(const std::string& connStr_)
+  {
+    neo4j_connection_t *connection = neo4j_connect(
+       connStr_.c_str(), NULL, NEO4J_INSECURE);
+
+    if (!connection)
+    {
+      LOG(error) << "Neo4j connection (" << connStr_ << ") failed.";
+      return false;
+    }
+
+    neo4j_session_t *session = neo4j_new_session(connection);
+
+    if (session == NULL)
+    {
+      LOG(warning) << "Failed to start Neo4j session!";
+      return false;
+    }
+
+
+    std::unordered_set<std::uint64_t> created;
+    for (model::CppPointerAnalysis& pa : _pAnalysis)
+    {
+      std::string q;
+      std::string lhsHash = std::to_string(pa.lhs.mangledNameHash);
+      std::string rhsHash = std::to_string(pa.rhs.mangledNameHash);
+
+
+
+      //if (created.find(pa.lhs.mangledNameHash) == created.end())
+      {
+        q += "MERGE (`" + lhsHash + "`: StmtSide {hash: \"" + lhsHash + "\"}) ";
+        created.insert(pa.lhs.mangledNameHash);
+      }
+
+      //if (created.find(pa.rhs.mangledNameHash) == created.end())
+      {
+        q += "MERGE (`" + rhsHash + "`: StmtSide {hash: \"" + rhsHash + "\"}) ";
+        created.insert(pa.rhs.mangledNameHash);
+      }
+
+      std::vector<std::string> lhsOpt(pa.lhs.options.size());
+      std::transform(pa.lhs.options.begin(),pa.lhs.options.end(), lhsOpt.begin(),
+        [](model::CppPointerAnalysis::Options o){ return std::to_string(o); });
+
+      std::vector<std::string> rhsOpt(pa.rhs.options.size());
+      std::transform(pa.rhs.options.begin(),pa.rhs.options.end(), rhsOpt.begin(),
+        [](model::CppPointerAnalysis::Options o){ return std::to_string(o); });
+
+      q += "CREATE UNIQUE (`" + lhsHash +"`)-[:ASSIGN {id: \"" + std::to_string(pa.id)
+        +  "\",lhs_hash : \"" + lhsHash
+        +  "\", lhs_options : [" + boost::algorithm::join(lhsOpt, ", ")
+        +  "], lhs_operators : \"" + pa.lhs.operators
+        +  "\", rhs_hash : \"" + rhsHash
+        +  "\", rhs_options : [" + boost::algorithm::join(rhsOpt, ", ")
+        +  "], rhs_operators : \"" + pa.rhs.operators + "\"}]->(`" + rhsHash + "`) ";
+
+      if (lhsHash == "721939037967062766" ||
+          rhsHash == "721939037967062766")
+      {
+        LOG(warning) << q;
+      }
+      else
+      {
+
+      }
+
+      neo4j_result_stream_t* results = neo4j_run(session, q.c_str(), neo4j_null);
+
+      if (results == NULL)
+      {
+        LOG(error) << "Failed to run statement";
+        neo4j_perror(stderr, errno, "Failed to run statement");
+        LOG(debug) << q;
+      }
+
+      if (!results)
+        LOG(warning) << "Failed to run statement";
+      else
+        neo4j_close_results(results);
+
+    }
+
+    neo4j_end_session(session);
+    neo4j_close(connection);
+    neo4j_client_cleanup();
+
+    return true;
+  }
+
   ~PointerAnalysisCollector()
   {
     (util::OdbTransaction(_ctx.db))([this]{
@@ -637,6 +730,9 @@ public:
 
       for (model::CppPointerAnalysis& pAnalysis : _pAnalysis)
         _ctx.db->persist(pAnalysis);
+
+      if (_ctx.options.count("neo4j"))
+        persistDataToNeo4j(_ctx.options["neo4j"].as<std::string>());
     });
   }
 

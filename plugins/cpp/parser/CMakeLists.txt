@@ -23,6 +23,7 @@ add_library(cppparser SHARED
 target_link_libraries(cppparser
   cppmodel
   model
+  neo4j-client
   clangTooling
   clangFrontendTool
   clangFrontend
