@@ -27,6 +27,7 @@ PointerAnalysisDiagram::PointerAnalysisDiagram(
   const boost::program_options::variables_map& config_)
     : _db(db_),
       _transaction(db_),
+      _config(config_),
       _cppHandler(db_, datadir_, config_),
       _projectHandler(db_, datadir_, config_)
 {
@@ -53,7 +54,7 @@ void PointerAnalysisDiagram::getAndersenPointerAnalysisDiagram(
 
   //--- Collect statements ---//
 
-  PointerAnalysisStmtCollector collector(_db);
+  PointerAnalysisStmtCollector collector(_db, _config);
   std::vector<model::CppPointerAnalysis> statements =
     collector.collect(node.mangledNameHash);
 
@@ -63,6 +64,8 @@ void PointerAnalysisDiagram::getAndersenPointerAnalysisDiagram(
   Andersen::PointsToSet pointsToSet = algorithm.run(statements);
 
   //--- Draw pointer analysis diagram ---//
+
+  return;
 
   std::unordered_map<std::uint64_t, model::CppAstNode> astNodeCache;
   _transaction([&, this]{
@@ -139,7 +142,7 @@ void PointerAnalysisDiagram::getSteensgaardPointerAnalysisDiagram(
 
   //--- Collect statements ---//
 
-  PointerAnalysisStmtCollector collector(_db);
+  PointerAnalysisStmtCollector collector(_db, _config);
   std::vector<model::CppPointerAnalysis> statements =
     collector.collect(node.mangledNameHash);
 
@@ -148,6 +151,8 @@ void PointerAnalysisDiagram::getSteensgaardPointerAnalysisDiagram(
   Steensgaard algorithm;
   std::map<model::CppPointerAnalysis::StmtSide, Steensgaard::TypeNodePtr> res =
     algorithm.run(statements);
+
+  return;
 
   //--- Draw pointer analysis diagram ---//
 

@@ -8,6 +8,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/service/project/gen-cpp
   ${PROJECT_SOURCE_DIR}/service/project/include
   ${PLUGIN_DIR}/model/include
+  ${PLUGIN_DIR}/util/include
   ${THRIFT_LIBTHRIFT_INCLUDE_DIRS})
 
 add_library(cppservice SHARED
@@ -30,6 +31,7 @@ target_link_libraries(cppservice
   projectservice
   languagethrift
   gvc
+  neo4j-client
   ${THRIFT_LIBTHRIFT_LIBRARIES})
 
 install(TARGETS cppservice DESTINATION ${INSTALL_SERVICE_DIR})

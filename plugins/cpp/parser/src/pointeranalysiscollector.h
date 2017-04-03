@@ -3,10 +3,13 @@
 
 #include <vector>
 #include <queue>
+#include <errno.h>
 
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/AST/Decl.h>
 #include <clang/AST/ASTContext.h>
+
+#include <neo4j-client.h>
 
 #include <model/cppastnode.h>
 #include <model/cppastnode-odb.hxx>
@@ -294,6 +297,8 @@ public:
     std::unordered_map<const void*, model::CppAstNodeId>& clangToAstNodeId_);
 
   ~PointerAnalysisCollector();
+
+  bool persistDataToNeo4j(const std::string& connStr_);
 
   /**
    * Collect overridden functions for method declarations.

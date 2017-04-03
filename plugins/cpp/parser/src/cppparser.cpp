@@ -427,8 +427,11 @@ extern "C"
     boost::program_options::options_description description("C++ Plugin");
 
     description.add_options()
-    ("skip-cpp-pointeranalysis",
-     "Enable C++ pointer analysis.");
+      ("skip-cpp-pointeranalysis",
+       "Enable C++ pointer analysis.")
+      ("neo4j", boost::program_options::value<std::string>(),
+       "Neo4j database connection string. Connection string has the "
+       "following format: neo4j://neo4j:codecompass@localhost:7687.");
 
     return description;
   }

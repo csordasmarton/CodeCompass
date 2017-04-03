@@ -488,11 +488,10 @@ compile_neo4j()
   local config_options=$@
 
   echo_info "Cleaning $src_dir"
-  make clean
+  # make clean
 
   echo_info "Configuring $src_dir"
-  ./autogen.sh
-  LDFLAGS="$LDFLAGS" ./configure --prefix=$CCMP_DEPS $config_options || exit -1
+  LDFLAGS="$LDFLAGS" ./configure --without-tls  --prefix=$CCMP_DEPS $config_options || exit -1
 
   echo_info "Making $src_dir"
   make -j$cpu_count || exit -1
